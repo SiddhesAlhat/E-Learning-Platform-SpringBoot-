@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: elearning-platform
+  datasource:
+    url: jdbc:postgresql://localhost:5432/elearning_db
+    username: postgres
+    password: password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/elearning_analytics
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
+server:
+  port: 8080
+
+app:
+  jwt:
+    secret: 9a4f2c8d3b7e1f5g6h7i8j9k0l1m2n3o4p5q6r7s8t9u0v
+    expiration-milliseconds: 86400000 # 24 hours
+  cors:
+    allowed-origins: http://localhost:5173 # Vite default port
