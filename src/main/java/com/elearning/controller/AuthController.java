@@ -41,9 +41,7 @@ public class AuthController {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         loginRequest.getUsername(),
-                        loginRequest.getPassword()
-                )
-        );
+                        loginRequest.getPassword()));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String token = tokenProvider.generateToken(authentication);
@@ -68,11 +66,21 @@ public class AuthController {
         user.setFirstName(signupRequest.getFirstName());
         user.setLastName(signupRequest.getLastName());
 
-        Set<String> roles = new HashSet<>();
+        Set<User.Role> roles = new HashSet<>();
         if (signupRequest.getRoles() == null || signupRequest.getRoles().isEmpty()) {
-            roles.add("ROLE_STUDENT");
+            roles.add(User.Role.STUDENT);
         } else {
-            roles.addAll(signupRequest.getRoles());
+            // Convert string roles to enum
+            for (String roleStr : signupRequest.getRoles()) {
+                try {
+                    // Remove ROLE_ prefix if present
+                    String cleanRole = roleStr.startsWith("ROLE_") ? roleStr.substring(5) : roleStr;
+                    roles.add(User.Role.valueOf(cleanRole.toUpperCase()));
+                } catch (IllegalArgumentException e) {
+                    // Default to STUDENT if invalid role
+                    roles.add(User.Role.STUDENT);
+                }
+            }
         }
         user.setRoles(roles);
         user.setPoints(0);

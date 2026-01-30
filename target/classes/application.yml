@@ -15,10 +15,21 @@ spring:
   data:
     mongodb:
       uri: mongodb://localhost:27017/elearning_analytics
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
   servlet:
     multipart:
       max-file-size: 100MB
       max-request-size: 100MB
+  cache:
+    type: redis
 
 server:
   port: 8080
@@ -29,3 +40,39 @@ app:
     expiration-milliseconds: 86400000 # 24 hours
   cors:
     allowed-origins: http://localhost:5173 # Vite default port
+
+# AWS Configuration
+aws:
+  s3:
+    bucket: elearning-platform-content
+    region: us-east-1
+  cloudfront:
+    domain: cdn.elearning-platform.com
+
+# ML Service Configuration
+ml:
+  service:
+    url: http://localhost:5000
+    timeout: 30000
+
+# Learning Path Configuration
+learning:
+  path:
+    default:
+      duration:
+        weeks: 12
+
+# Elasticsearch Configuration
+elasticsearch:
+  rest:
+    uris: http://localhost:9200
+
+# Logging Configuration
+logging:
+  level:
+    com.elearning: DEBUG
+    org.springframework.web: INFO
+    org.springframework.security: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

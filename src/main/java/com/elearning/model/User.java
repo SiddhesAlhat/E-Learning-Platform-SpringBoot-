@@ -4,11 +4,17 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Builder;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.Set;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Entity
 @Table(name = "users")
 public class User {
@@ -29,14 +35,30 @@ public class User {
     private String lastName;
 
     @ElementCollection(fetch = FetchType.EAGER)
+    @Enumerated(EnumType.STRING)
     @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "role")
-    private Set<String> roles; // ROLE_STUDENT, ROLE_INSTRUCTOR, ROLE_ADMIN
+    @Builder.Default
+    private Set<Role> roles = new HashSet<>();
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean isActive = true;
 
     // Gamification stats
+    @Builder.Default
     private Integer points = 0;
+
+    @Builder.Default
     private Integer level = 1;
-    
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private Set<UserBadge> badges;
+
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    public enum Role {
+        STUDENT, INSTRUCTOR, ADMIN
+    }
 }

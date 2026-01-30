@@ -19,12 +19,13 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/courses")
 @Slf4j
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:3000"})
+@CrossOrigin(origins = { "http://localhost:5173", "http://localhost:3000" })
 public class CourseController {
 
     @Autowired
@@ -41,7 +42,7 @@ public class CourseController {
     public ResponseEntity<Page<CourseDTO>> getAllPublishedCourses(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        
+
         Pageable pageable = PageRequest.of(page, size);
         Page<CourseDTO> courses = courseService.getPublishedCourses(pageable);
         return ResponseEntity.ok(courses);
@@ -52,7 +53,7 @@ public class CourseController {
     public ResponseEntity<CourseDetailDTO> getCourse(
             @PathVariable Long courseId,
             @AuthenticationPrincipal UserDetails userDetails) {
-        
+
         User user = userService.findByUsername(userDetails.getUsername());
         CourseDetailDTO course = courseService.getCourseWithProgress(courseId, user.getId());
         return ResponseEntity.ok(course);
@@ -63,11 +64,11 @@ public class CourseController {
     @PreAuthorize("hasRole('INSTRUCTOR')")
     public ResponseEntity<CourseDTO> createCourse(
             @Valid @RequestBody CreateCourseRequest request,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        
+            @AuthenticationPrincipal UserDetails userDetails) throws IOException {
+
         User instructor = userService.findByUsername(userDetails.getUsername());
         CourseDTO course = courseService.createCourse(request, instructor);
-        
+
         return ResponseEntity.status(HttpStatus.CREATED).body(course);
     }
 
@@ -77,12 +78,12 @@ public class CourseController {
     public ResponseEntity<CourseDTO> createCourseWithThumbnail(
             @RequestPart("course") @Valid CreateCourseRequest request,
             @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        
+            @AuthenticationPrincipal UserDetails userDetails) throws IOException {
+
         User instructor = userService.findByUsername(userDetails.getUsername());
         request.setThumbnail(thumbnail);
         CourseDTO course = courseService.createCourse(request, instructor);
-        
+
         return ResponseEntity.status(HttpStatus.CREATED).body(course);
     }
 
@@ -92,11 +93,11 @@ public class CourseController {
     public ResponseEntity<CourseDTO> updateCourse(
             @PathVariable Long courseId,
             @Valid @RequestBody CreateCourseRequest request,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        
+            @AuthenticationPrincipal UserDetails userDetails) throws IOException {
+
         User instructor = userService.findByUsername(userDetails.getUsername());
         CourseDTO course = courseService.updateCourse(courseId, request, instructor);
-        
+
         return ResponseEntity.ok(course);
     }
 
@@ -106,10 +107,10 @@ public class CourseController {
     public ResponseEntity<Void> deleteCourse(
             @PathVariable Long courseId,
             @AuthenticationPrincipal UserDetails userDetails) {
-        
+
         User instructor = userService.findByUsername(userDetails.getUsername());
         courseService.deleteCourse(courseId, instructor);
-        
+
         return ResponseEntity.noContent().build();
     }
 
@@ -120,7 +121,7 @@ public class CourseController {
             @PathVariable Long courseId,
             @Valid @RequestBody CreateModuleRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
-        
+
         ModuleDTO module = courseService.addModuleToCourse(courseId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(module);
     }
@@ -132,8 +133,8 @@ public class CourseController {
             @PathVariable Long courseId,
             @PathVariable Long moduleId,
             @Valid @RequestBody CreateLessonRequest request,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        
+            @AuthenticationPrincipal UserDetails userDetails) throws IOException {
+
         LessonDTO lesson = courseService.addLessonToModule(moduleId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(lesson);
     }
@@ -148,15 +149,15 @@ public class CourseController {
             @RequestParam("title") String title,
             @RequestParam(value = "description", required = false) String description,
             @RequestParam(value = "isPreview", defaultValue = "false") boolean isPreview,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        
+            @AuthenticationPrincipal UserDetails userDetails) throws IOException {
+
         CreateLessonRequest request = new CreateLessonRequest();
         request.setTitle(title);
         request.setDescription(description);
         request.setContentType(Lesson.ContentType.VIDEO);
         request.setContentFile(file);
         request.setIsPreview(isPreview);
-        
+
         LessonDTO lesson = courseService.addLessonToModule(moduleId, request);
         return ResponseEntity.ok(lesson);
     }
@@ -170,14 +171,14 @@ public class CourseController {
             @RequestParam("file") MultipartFile file,
             @RequestParam("title") String title,
             @RequestParam(value = "description", required = false) String description,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        
+            @AuthenticationPrincipal UserDetails userDetails) throws IOException {
+
         CreateLessonRequest request = new CreateLessonRequest();
         request.setTitle(title);
         request.setDescription(description);
         request.setContentType(Lesson.ContentType.DOCUMENT);
         request.setContentFile(file);
-        
+
         LessonDTO lesson = courseService.addLessonToModule(moduleId, request);
         return ResponseEntity.ok(lesson);
     }
@@ -187,20 +188,20 @@ public class CourseController {
     public ResponseEntity<VideoStreamDTO> getVideoStream(
             @PathVariable Long lessonId,
             @AuthenticationPrincipal UserDetails userDetails) {
-        
+
         User user = userService.findByUsername(userDetails.getUsername());
-        
+
         // Verify user has access to this lesson
         if (!courseService.hasAccessToLesson(user.getId(), lessonId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
-        
+
         // This would generate a signed URL or token for video streaming
         VideoStreamDTO streamData = new VideoStreamDTO();
         streamData.setLessonId(lessonId);
         streamData.setStreamUrl("https://cdn.example.com/video/" + lessonId + "/playlist.m3u8");
         streamData.setToken("generated-jwt-token");
-        
+
         return ResponseEntity.ok(streamData);
     }
 
@@ -210,7 +211,7 @@ public class CourseController {
             @RequestParam String query,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        
+
         Pageable pageable = PageRequest.of(page, size);
         Page<CourseDTO> courses = courseService.searchCourses(query, pageable);
         return ResponseEntity.ok(courses);
@@ -220,7 +221,7 @@ public class CourseController {
     @GetMapping("/category/{categoryId}")
     public ResponseEntity<List<CourseDTO>> getCoursesByCategory(
             @PathVariable Long categoryId) {
-        
+
         List<CourseDTO> courses = courseService.getCoursesByCategory(categoryId);
         return ResponseEntity.ok(courses);
     }
@@ -230,7 +231,7 @@ public class CourseController {
     @PreAuthorize("hasRole('INSTRUCTOR')")
     public ResponseEntity<List<CourseDTO>> getInstructorCourses(
             @AuthenticationPrincipal UserDetails userDetails) {
-        
+
         User instructor = userService.findByUsername(userDetails.getUsername());
         List<CourseDTO> courses = courseService.getCoursesByInstructor(instructor.getId());
         return ResponseEntity.ok(courses);
@@ -242,10 +243,10 @@ public class CourseController {
     public ResponseEntity<EnrollmentDTO> enrollInCourse(
             @PathVariable Long courseId,
             @AuthenticationPrincipal UserDetails userDetails) {
-        
+
         User student = userService.findByUsername(userDetails.getUsername());
         EnrollmentDTO enrollment = enrollmentService.enrollStudent(student.getId(), courseId);
-        
+
         return ResponseEntity.status(HttpStatus.CREATED).body(enrollment);
     }
 
@@ -254,10 +255,10 @@ public class CourseController {
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<List<EnrollmentDTO>> getEnrolledCourses(
             @AuthenticationPrincipal UserDetails userDetails) {
-        
+
         User student = userService.findByUsername(userDetails.getUsername());
         List<EnrollmentDTO> enrollments = enrollmentService.getStudentEnrollments(student.getId());
-        
+
         return ResponseEntity.ok(enrollments);
     }
 
@@ -272,7 +273,7 @@ public class CourseController {
         // Legacy endpoint - would need to be updated
         return ResponseEntity.ok(courseDTO);
     }
-    
+
     @GetMapping("/legacy/{id}")
     public ResponseEntity<CourseDTO> getCourseById(@PathVariable Long id) {
         // Legacy endpoint - redirects to new implementation

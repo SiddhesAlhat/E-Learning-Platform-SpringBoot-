@@ -53,7 +53,8 @@ public class AdaptiveLearningService {
                 .collect(Collectors.toList());
     }
 
-    private Map<String, Double> analyzeCategoryPerformance(List<Submission> submissions, List<LearningAnalytics> analytics) {
+    private Map<String, Double> analyzeCategoryPerformance(List<Submission> submissions,
+            List<LearningAnalytics> analytics) {
         Map<String, Double> performance = new HashMap<>();
 
         // Calculate average scores by category (simplified)
@@ -61,7 +62,7 @@ public class AdaptiveLearningService {
             if (sub.isGraded() && sub.getAssignment() != null) {
                 String category = getCourseCategory(sub.getAssignment());
                 double score = (double) sub.getScore() / sub.getAssignment().getMaxScore();
-                
+
                 performance.merge(category, score, (old, newVal) -> (old + newVal) / 2);
             }
         }
@@ -71,17 +72,17 @@ public class AdaptiveLearningService {
 
     private String getCourseCategory(Assignment assignment) {
         // Navigate up to get course category
-        if (assignment.getLesson() != null && 
-            assignment.getLesson().getModule() != null && 
-            assignment.getLesson().getModule().getCourse() != null) {
+        if (assignment.getLesson() != null &&
+                assignment.getLesson().getModule() != null &&
+                assignment.getLesson().getModule().getCourse() != null) {
             return assignment.getLesson().getModule().getCourse().getCategory();
         }
         return "General";
     }
 
-    private double calculateCourseRelevance(Course course, User student, 
-                                           Map<String, Double> categoryPerformance,
-                                           List<LearningAnalytics> analytics) {
+    private double calculateCourseRelevance(Course course, User student,
+            Map<String, Double> categoryPerformance,
+            List<LearningAnalytics> analytics) {
         double score = 0.0;
 
         // Factor 1: Category interest (30%)
@@ -114,8 +115,8 @@ public class AdaptiveLearningService {
         return score;
     }
 
-    private double matchDifficultyToStudent(String courseDifficulty, User student, 
-                                           Map<String, Double> performance) {
+    private double matchDifficultyToStudent(String courseDifficulty, User student,
+            Map<String, Double> performance) {
         // Calculate student's overall performance level
         double avgPerformance = performance.values().stream()
                 .mapToDouble(Double::doubleValue)
@@ -123,7 +124,8 @@ public class AdaptiveLearningService {
                 .orElse(0.5);
 
         // Match difficulty to performance
-        if (courseDifficulty == null) return 0.5;
+        if (courseDifficulty == null)
+            return 0.5;
 
         switch (courseDifficulty.toUpperCase()) {
             case "BEGINNER":
@@ -175,7 +177,7 @@ public class AdaptiveLearningService {
         // Determine focus area
         Map<String, Double> categoryPerformance = analyzeCategoryPerformance(
                 submissionRepository.findByStudent(student), analytics);
-        
+
         String focusArea = categoryPerformance.entrySet().stream()
                 .max(Map.Entry.comparingByValue())
                 .map(Map.Entry::getKey)
