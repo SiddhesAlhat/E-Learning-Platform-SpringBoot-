@@ -8,9 +8,9 @@ import org.modelmapper.ModelMapper;
 @SpringBootApplication
 public class ELearningApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(ELearningApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(ELearningApplication.class, args);
+    }
 
     @Bean
     public ModelMapper modelMapper() {
